@@ -15,6 +15,8 @@ abstract class UserTable extends Table {
 	
 	public abstract function getAllUser();
 	
+	public abstract function getOnlineUser();
+	
 // 	public abstract function addUser(User $user);
 	
 // 	public abstract function upateUser(User $user);

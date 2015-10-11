@@ -3,12 +3,12 @@
 include_once './model/UserTable.php';
 include_once './model/User.php';
 include_once './model/impl/UserImpl.php';
+include_once './conn/SimpleResponse.php';
 
 
 class UserTableImpl extends UserTable {
 	
 	private static $TAG = "UserTableImpl";
-	
 	
 	
 	
@@ -26,14 +26,30 @@ class UserTableImpl extends UserTable {
 	}
 	
 	
-	public function getUser($account) {
+	public function getUser($username) {
+		$rtn = NULL;
+		$cmd = 'SELECT * FROM ' . UserTable::$TB_USER . ' WHERE '
+			. UserTable::$FD_ACCOUNT . "='$username'";
+// 		$cmd = 'SELECT' . UserTable::$FD_ACCOUNT . ', ' . UserTable::$FD_PASSWORD
+// 			. ' FROM ' . UserTable::$TB_USER;
 		
+		$result = $this->CONN->query($cmd);
+		if($result->num_rows > 0) {
+			$row = $result->fetch_assoc();
+			$rtn = new UserImpl();
+			$rtn->setId($row[UserTable::$FD_ID]);
+			$rtn->setAccount($row[UserTable::$FD_ACCOUNT]);
+			$rtn->setPasswoed($row[UserTable::$FD_PASSWORD]);
+			$rtn->setDeviceId($row[UserTable::$FD_DEVICE_ID]);
+			$rtn->setCreateDate($row[UserTable::$FD_CREATE_DATE]);
+		}
+		
+		return $rtn;
 	}
 	
 	public function getAllUser() {
 		$cmd = "SELECT * FROM " . UserTable::$TB_USER;
 // 		$result = $this->CONN.mysql_query($cmd);
-		
 		$result = $this->CONN->query($cmd); 
 		
 		if($result->num_rows > 0)
@@ -61,6 +77,12 @@ class UserTableImpl extends UserTable {
 		return $rtn;
 	}
 	
+	/**
+	 * Not implemented.
+	 * @see UserTable::getOnlineUser()
+	 */
+	public function getOnlineUser() {
+	}
 	
 	public function add($user) {
 		if(!$this->checkUserObj($user)) return;
@@ -68,15 +90,16 @@ class UserTableImpl extends UserTable {
 		
 		$account = $user->getAccount();
 		$ps = $user->getPasswoed();
+		$device_id = $user->getDeviceId();
 		$cmd = "INSERT INTO User (id, " . UserTable::$FD_ACCOUNT . ", ". UserTable::$FD_PASSWORD 
 			. ", " . UserTable::$FD_CREATE_DATE . ", " . UserTable::$FD_DEVICE_ID
-			. ") VALUES (NULL, '$account', '$ps', CURRENT_TIMESTAMP, NULL);";
+			. ") VALUES (NULL, '$account', '$ps', CURRENT_TIMESTAMP, '$device_id');";
 			
 // 		$result = mysql_query($cmd);
 // 		if($result)
 // 			error_log(print_r("adds new record into User table of db ", TRUE));
 		
-		$result = $this->CONN->query($query);
+		$result = $this->CONN->query($cmd);
 		
 		return $result;
 	}
@@ -88,14 +111,15 @@ class UserTableImpl extends UserTable {
 		$account = $user->getAccount();
 		$ps = $user->getPasswoed();
 		$device_id = $user->getDeviceId();
-		$cmd = "UPDATE " . UserTable::$TB_USER . " SET " . 
-				UserTable::$FD_ACCOUNT . "='$account,'" .
-				UserTable::$FD_PASSWORD . "='$ps'," .
+		$cmd = 'UPDATE ' . UserTable::$TB_USER . ' SET ' . 
+				UserTable::$FD_ACCOUNT . "='$account', " .
+				UserTable::$FD_PASSWORD . "='$ps', " .
 				UserTable::$FD_DEVICE_ID . "='$device_id' " .
-				"WHEERE " . UserTable::$FD_ID . "='$id'";
+				'WHERE ' . UserTable::$FD_ID . "=$id";
 		
-		$result = mysql_query($cmd);
+		$result = $this->CONN->query($cmd);
 		
+		return $result;
 	}
 	
 	public function delete($user) {

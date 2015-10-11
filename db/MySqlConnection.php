@@ -11,6 +11,9 @@ class MySqlConnection {
 	
 	private static $INSTANCE;
 	
+	private function __construct() {
+		
+	}
 	
 	public static function getInstance() {
 		if(!empty($INSTANCE))
